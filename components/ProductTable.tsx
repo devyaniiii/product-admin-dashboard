@@ -2,7 +2,12 @@
 import { Product } from "@/lib/products";
 import Link from "next/link";
 
-export default function ProductTable({ products }: { products: Product[] }) {
+interface ProductTableProps {
+  products: Product[];
+  onDeleteClick: (product: Product) => void;
+}
+
+export default function ProductTable({ products, onDeleteClick }: ProductTableProps) {
   return (
     <table className="w-full border-collapse">
       <thead>
@@ -13,6 +18,7 @@ export default function ProductTable({ products }: { products: Product[] }) {
           <th className="p-3">Price</th>
           <th className="p-3">Rating</th>
           <th className="p-3">Stock</th>
+          <th className="p-3"></th>
         </tr>
       </thead>
       <tbody>
@@ -39,7 +45,15 @@ export default function ProductTable({ products }: { products: Product[] }) {
             </td>
             <td className="p-3">${product.price}</td>
             <td className="p-3">⭐ {product.rating}</td>
-            <td className="p-3">{product.stock}</td>
+                       <td className="p-3">{product.stock}</td>
+            <td className="p-3">
+              <button
+                onClick={() => onDeleteClick(product)}
+                className="text-red-600 text-sm hover:underline"
+              >
+                Delete
+              </button>
+            </td>
           </tr>
         ))}
       </tbody>
