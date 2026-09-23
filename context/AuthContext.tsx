@@ -51,8 +51,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveSession(result); // writes token + user to localStorage
     // Store everything except the token in React state
     // (the token lives only in localStorage; the Axios interceptor reads it from there).
-    const { token: _token, ...userWithoutToken } = result;
-    setUser(userWithoutToken);
+   setUser({
+  id: result.id,
+  username: result.username,
+  email: result.email,
+  firstName: result.firstName,
+  lastName: result.lastName,
+  image: result.image,
+});
   }
 
   function logout() {
