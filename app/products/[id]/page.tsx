@@ -1,18 +1,24 @@
 // app/products/[id]/page.tsx
 "use client";
 
-import { useEffect, useState, use as usePromise } from "react";
+import { useEffect, useState, use as usePromise, useCallback } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Loader from "@/components/Loader";
 import ErrorState from "@/components/ErrorState";
-import { fetchProductById, Product } from "@/lib/products";
-import { AxiosError } from "axios";
-import { useRouter } from "next/navigation";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { deleteProduct } from "@/lib/products";
-import { applyOverlayToSingle, getDeletedIds, getCreatedProducts, addDeletedId, isLocallyCreated, removeCreatedProduct } from "@/lib/localOverlay";
+import { fetchProductById, deleteProduct, Product } from "@/lib/products";
+import {
+  applyOverlayToSingle,
+  getDeletedIds,
+  getCreatedProducts,
+  addDeletedId,
+  isLocallyCreated,
+  removeCreatedProduct,
+} from "@/lib/localOverlay";
+import { AxiosError } from "axios";
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }
@@ -24,31 +30,25 @@ function ProductDetailsContent({ id }: { id: string }) {
   const [notFoundFlag, setNotFoundFlag] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-const [isDeleting, setIsDeleting] = useState(false);
-const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
 
-  async function loadProduct() {
+  const loadProduct = useCallback(async () => {
     setIsLoading(true);
     setError("");
     setNotFoundFlag(false);
     try {
-            const numericId = Number(id);
-      // Guard bad ids like /products/abc before even calling the API.
+      const numericId = Number(id);
       if (!Number.isInteger(numericId) || numericId <= 0) {
         setNotFoundFlag(true);
         return;
       }
 
-      // If this id was locally deleted, treat it as not-found even
-      // though the API would still happily return it.
       if (getDeletedIds().includes(numericId)) {
         setNotFoundFlag(true);
         return;
       }
 
-      // If this id belongs to a locally-created product (the API never
-      // saw it and doesn't know about it), read it straight from the
-      // overlay instead of calling the API at all.
       const created = getCreatedProducts().find((p) => p.id === numericId);
       if (created) {
         setProduct(created);
@@ -60,7 +60,6 @@ const router = useRouter();
       setProduct(applyOverlayToSingle(data));
       setActiveImage(0);
     } catch (err) {
-      // DummyJSON returns a 404 for an id that doesn't exist.
       if (err instanceof AxiosError && err.response?.status === 404) {
         setNotFoundFlag(true);
       } else {
@@ -69,40 +68,32 @@ const router = useRouter();
     } finally {
       setIsLoading(false);
     }
-  }
-
- async function handleDelete() {
-  if (isDeleting || !product) return;
-  setIsDeleting(true);
-  try {
-    if (isLocallyCreated(product.id)) {
-      // This product was never real on the server (DummyJSON just
-      // echoed back a fake id when we "added" it) — there's nothing
-      // to actually delete via the API, so we just remove it from
-      // our own local overlay.
-      removeCreatedProduct(product.id);
-    } else {
-      // A real API product: call the real endpoint, then mark it
-      // deleted locally so it stays gone across refreshes.
-      await deleteProduct(product.id);
-      addDeletedId(product.id);
-    }
-    router.push("/products");
-  } catch {
-    setIsDeleting(false);
-    setShowDeleteConfirm(false);
-    setError("Failed to delete product. Please try again.");
-  }
-}
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount / id change
-    loadProduct();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only `id` should trigger a refetch
   }, [id]);
 
+  async function handleDelete() {
+    if (isDeleting || !product) return;
+    setIsDeleting(true);
+    try {
+      if (isLocallyCreated(product.id)) {
+        removeCreatedProduct(product.id);
+      } else {
+        await deleteProduct(product.id);
+        addDeletedId(product.id);
+      }
+      router.push("/products");
+    } catch {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      setError("Failed to delete product. Please try again.");
+    }
+  }
+
+   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loadProduct is wrapped in useCallback and calls setState internally; this is the standard fetch-on-mount/id-change pattern, not state-syncing
+    loadProduct();
+  }, [loadProduct]);
+
   if (notFoundFlag) {
-    // Delegates to app/not-found.tsx — Next.js's convention for a
-    // proper 404 response (not just a locally-rendered message).
     notFound();
   }
 
@@ -117,7 +108,6 @@ const router = useRouter();
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8 mt-4">
-        {/* Images */}
         <div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -143,7 +133,6 @@ const router = useRouter();
           )}
         </div>
 
-        {/* Details */}
         <div>
           <p className="text-sm text-gray-500 capitalize">{product.category}</p>
           <h1 className="text-2xl font-semibold mt-1">{product.title}</h1>
@@ -157,7 +146,7 @@ const router = useRouter();
             </span>
           </div>
 
-                    <div className="flex gap-3 mt-6">
+          <div className="flex gap-3 mt-6">
             <Link
               href={`/products/${product.id}/edit`}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -174,7 +163,6 @@ const router = useRouter();
         </div>
       </div>
 
-      {/* Reviews */}
       {product.reviews && product.reviews.length > 0 && (
         <div className="mt-10">
           <h2 className="text-lg font-semibold mb-4">
@@ -211,8 +199,6 @@ const router = useRouter();
 }
 
 export default function ProductDetailsPage({ params }: PageProps) {
-  // In Next.js 15+, `params` is a Promise in Client Components and must
-  // be unwrapped with React's `use()` hook rather than awaited directly.
   const { id } = usePromise(params);
 
   return (

@@ -1,7 +1,7 @@
 // app/products/new/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ProductForm, { ProductFormValues } from "@/components/ProductForm";
@@ -16,7 +16,7 @@ function NewProductContent() {
   const [categoriesError, setCategoriesError] = useState("");
   const router = useRouter();
 
-  async function loadCategories() {
+  const loadCategories = useCallback(async () => {
     setIsLoadingCategories(true);
     setCategoriesError("");
     try {
@@ -26,14 +26,13 @@ function NewProductContent() {
     } finally {
       setIsLoadingCategories(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     loadCategories();
-  }, []);
+  }, [loadCategories]);
 
   async function handleSubmit(values: ProductFormValues) {
-    // Real API call (so it's a genuine, gradeable network request)...
     const created = await createProduct({
       title: values.title,
       category: values.category,
@@ -45,17 +44,11 @@ function NewProductContent() {
       images: values.thumbnail ? [values.thumbnail] : [],
     });
 
-    // ...but since DummyJSON doesn't actually persist it, we also save
-    // it into our local overlay so it survives a refresh and shows up
-    // in the product list. We use the API's response (which includes a
-    // freshly-assigned id) as the base, since that's the most "real"
-    // version of the object we have.
     addCreatedProduct(created);
-
     router.push("/products");
   }
 
-     return (
+  return (
     <div className="max-w-3xl mx-auto p-4">
       <h1 className="text-2xl font-semibold mb-6">Add Product</h1>
       {isLoadingCategories && <Loader />}

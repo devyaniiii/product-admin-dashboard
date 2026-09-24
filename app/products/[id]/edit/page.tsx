@@ -1,7 +1,7 @@
 // app/products/[id]/edit/page.tsx
 "use client";
 
-import { useEffect, useState, use as usePromise } from "react";
+import { useEffect, useState, use as usePromise, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -24,7 +24,7 @@ function EditProductContent({ id }: { id: string }) {
   const [notFoundFlag, setNotFoundFlag] = useState(false);
   const router = useRouter();
 
-  async function load() {
+  const load = useCallback(async () => {
     setIsLoading(true);
     setError("");
     setNotFoundFlag(false);
@@ -49,14 +49,13 @@ function EditProductContent({ id }: { id: string }) {
     } finally {
       setIsLoading(false);
     }
-    
-  }
+  }, [id]);
 
   useEffect(() => {
     load();
-  }, [id]);
+  }, [load]);
 
-    if (notFoundFlag) notFound();
+  if (notFoundFlag) notFound();
   if (isLoading) return <Loader />;
   if (error) return <ErrorState message={error} onRetry={load} />;
   if (!product) return null;
@@ -73,10 +72,7 @@ function EditProductContent({ id }: { id: string }) {
       thumbnail: values.thumbnail || product!.thumbnail,
     };
 
-    // Real API call...
     await updateProduct(numericId, changes);
-    // ...plus local overlay, same reasoning as the Add form: DummyJSON
-    // won't actually remember this change, so we do.
     setEditedProduct(numericId, changes);
 
     router.push(`/products/${numericId}`);
