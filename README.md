@@ -3,8 +3,8 @@
 A small admin dashboard to log in and manage products, built against the
 free [DummyJSON](https://dummyjson.com) API.
 
-**Live demo:** _(add your Vercel link here after Step 14)_
-**Repo:** _(add your GitHub link here)_
+**Live demo:** https://product-admin-dashboard-flax.vercel.app
+**Repo:** https://github.com/devyaniiii/product-admin-dashboard
 
 ## Tech Stack
 - Next.js 16 (App Router) + TypeScript
