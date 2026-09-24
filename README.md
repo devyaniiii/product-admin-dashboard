@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Product Admin Dashboard
 
-## Getting Started
+A small admin dashboard to log in and manage products, built against the
+free [DummyJSON](https://dummyjson.com) API.
 
-First, run the development server:
+**Live demo:** _(add your Vercel link here after Step 14)_
+**Repo:** _(add your GitHub link here)_
+
+## Tech Stack
+- Next.js 16 (App Router) + TypeScript
+- Tailwind CSS
+- Axios (all API calls)
+- No React Query / SWR / table or pagination libraries — pagination,
+  search, filtering, and sorting logic is hand-written.
+
+## Setup
 
 ```bash
+git clone <your-repo-url>
+cd product-admin-dashboard
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). You'll be redirected to `/login`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Login credentials** (DummyJSON's test user):
+- Username: `emilys`
+- Password: `emilyspass`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## What's Finished
 
-## Learn More
+- [x] Login with DummyJSON `/auth/login`, inline error messages for wrong credentials, double-submit protection
+- [x] Protected routes — `/products/*` redirects to `/login` if not authenticated
+- [x] Logout button
+- [x] Product list: image, title, category, price, rating, stock — table on desktop, cards on mobile
+- [x] Pagination: page numbers, Previous/Next, page size (10/20/50), "Showing X–Y of Z" text
+- [x] Search with debounce (400ms) and race-condition protection (stale responses are discarded, verified with `&delay=2000`)
+- [x] Category filter (`/products/categories`) and sort by price/rating/title
+- [x] All of page/search/filter/sort state kept in the URL — refresh/share-safe
+- [x] Product details page (`/products/[id]`) with image gallery, description, price, reviews
+- [x] Custom 404 page for invalid/nonexistent product ids
+- [x] Add/Edit product form with client-side validation
+- [x] Delete with confirmation dialog
+- [x] Loading, empty, and error (with Retry) states across all data-fetching pages
+- [x] Invalid URL query values (`?page=abc`, `?page=999`) handled gracefully
+- [x] One shared Axios instance (`lib/axios.ts`) — attaches the auth token to every request via a request interceptor, handles 401s centrally via a response interceptor
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### One problem I faced and how I fixed it
+The delete dialog not showing for products with no reviews, because it was accidentally nested inside the reviews' conditional block.
+and i fixed it by moving it outside that block so it always renders
