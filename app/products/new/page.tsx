@@ -7,20 +7,29 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import ProductForm, { ProductFormValues } from "@/components/ProductForm";
 import { createProduct, fetchCategories } from "@/lib/products";
 import { addCreatedProduct } from "@/lib/localOverlay";
+import ErrorState from "@/components/ErrorState";
+import Loader from "@/components/Loader";
 
 function NewProductContent() {
   const [categories, setCategories] = useState<string[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [categoriesError, setCategoriesError] = useState("");
   const router = useRouter();
 
-  useEffect(() => {
-    async function load() {
-            try {
-        setCategories(await fetchCategories());
-      } catch {
-        setCategories([]);
-      }
+  async function loadCategories() {
+    setIsLoadingCategories(true);
+    setCategoriesError("");
+    try {
+      setCategories(await fetchCategories());
+    } catch {
+      setCategoriesError("Failed to load categories.");
+    } finally {
+      setIsLoadingCategories(false);
     }
-    load();
+  }
+
+  useEffect(() => {
+    loadCategories();
   }, []);
 
   async function handleSubmit(values: ProductFormValues) {
@@ -46,14 +55,20 @@ function NewProductContent() {
     router.push("/products");
   }
 
-  return (
+     return (
     <div className="max-w-3xl mx-auto p-4">
       <h1 className="text-2xl font-semibold mb-6">Add Product</h1>
-      <ProductForm
-        categories={categories}
-        onSubmit={handleSubmit}
-        submitLabel="Add Product"
-      />
+      {isLoadingCategories && <Loader />}
+      {!isLoadingCategories && categoriesError && (
+        <ErrorState message={categoriesError} onRetry={loadCategories} />
+      )}
+      {!isLoadingCategories && !categoriesError && (
+        <ProductForm
+          categories={categories}
+          onSubmit={handleSubmit}
+          submitLabel="Add Product"
+        />
+      )}
     </div>
   );
 }
