@@ -28,7 +28,8 @@ function NewProductContent() {
     }
   }, []);
 
-  useEffect(() => {
+   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loadCategories is wrapped in useCallback and calls setState internally; standard fetch-on-mount pattern, not state-syncing
     loadCategories();
   }, [loadCategories]);
 

@@ -104,7 +104,8 @@ function ProductsPageContent() {
     }
   }, [query.page, query.limit, query.sortBy, query.order, query.category, debouncedSearch, setQuery]);
 
-  useEffect(() => {
+   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loadProducts is wrapped in useCallback and calls setState internally; refetches on URL/debounced-search change, not state-syncing
     loadProducts();
   }, [loadProducts]);
 
