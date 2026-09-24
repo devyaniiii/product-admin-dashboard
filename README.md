@@ -16,7 +16,7 @@ free [DummyJSON](https://dummyjson.com) API.
 ## Setup
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/devyaniiii/product-admin-dashboard.git
 cd product-admin-dashboard
 npm install
 npm run dev
